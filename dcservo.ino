@@ -1,3 +1,6 @@
+
+/* This one is not using any PinChangeInterrupt library */
+
 /*
    This program uses an Arduino for a closed-loop control of a DC-motor. 
    Motor motion is detected by a quadrature encoder.
@@ -15,8 +18,6 @@
    Please note PID gains kp, ki, kd need to be tuned to each different setup. 
 */
 #include <EEPROM.h>
-#include <PinChangeInt.h>
-#include <PinChangeIntConfig.h>
 #include <PID_v1.h>
 #define encoder0PinA  2 // PD2; 
 #define encoder0PinB  8  // PC0;
@@ -38,11 +39,19 @@ bool newStep = false;
 bool oldStep = false;
 bool dir = false;
 
+// Install Pin change interrupt for a pin, can be called multiple times
+void pciSetup(byte pin) 
+{
+    *digitalPinToPCMSK(pin) |= bit (digitalPinToPCMSKbit(pin));  // enable pin
+    PCIFR  |= bit (digitalPinToPCICRbit(pin)); // clear any outstanding interrupt
+    PCICR  |= bit (digitalPinToPCICRbit(pin)); // enable interrupt for the group 
+}
+
 void setup() { 
   pinMode(encoder0PinA, INPUT); 
   pinMode(encoder0PinB, INPUT);  
-  PCintPort::attachInterrupt(encoder0PinB, doEncoderMotor0,CHANGE); // now with 4x resolution as we use the two edges of A & B pins
-  attachInterrupt(0, doEncoderMotor0, CHANGE);  // encoder pin on interrupt 0 - pin 2
+  pciSetup(encoder0PinB);
+  attachInterrupt(0, encoderInt, CHANGE);  // encoder pin on interrupt 0 - pin 2
   attachInterrupt(1, countStep      , RISING);  // step  input on interrupt 1 - pin 3
   TCCR1B = TCCR1B & 0b11111000 | 1; // set 31Kh PWM
   Serial.begin (115200);
@@ -72,11 +81,18 @@ void pwmOut(int out) {
 
 const int QEM [16] = {0,-1,1,2,1,0,2,-1,-1,2,0,1,2,1,-1,0};               // Quadrature Encoder Matrix
 static unsigned char New, Old;
-void doEncoderMotor0(){ 
+ISR (PCINT0_vect) { // handle pin change interrupt for D8
   Old = New;
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
   encoder0Pos+= QEM [Old * 4 + New];
 }
+
+void encoderInt() { // handle pin change interrupt for D8
+  Old = New;
+  New = (PINB & 1 )+ ((PIND & 4) >> 1); //
+  encoder0Pos+= QEM [Old * 4 + New];
+}
+
 
 void countStep(){ if (PINC&B0000001) target1--;else target1++; } // pin A0 represents direction
 
@@ -110,6 +126,7 @@ void help() {
  Serial.println("X123 sets the target destination for the motor to 123 encoder pulses");
  Serial.println("T will start a sequence of random destinations (between 0 and 2000) every 3 seconds. T again will disable that");
  Serial.println("Q will print out the current values of P, I and D parameters"); 
+ Serial.println("W will store current values of P, I and D parameters into EEPROM"); 
  Serial.println("H will print this help message again\n"); 
 }
 
@@ -142,7 +159,7 @@ void recoverPIDfromEEPROM() {
 
 void eeput(double value, int dir) { // Snow Leopard keeps me grounded to 1.0.6 Arduino, so I have to do this :-(
   char * addr = (char * ) &value;
-  for(int i=dir; i<dir+4; i++) { EEPROM.write(i,addr[i-dir]); Serial.print((byte) addr[i-dir],HEX); Serial.print(" "); }
+  for(int i=dir; i<dir+4; i++)  EEPROM.write(i,addr[i-dir]);
 }
 
 double eeget(int dir) { // Snow Leopard keeps me grounded to 1.0.6 Arduino, so I have to do this :-(
