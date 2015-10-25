@@ -26,4 +26,4 @@ Q will print out the current values of P, I and D parameters
 W will store current values of P, I and D parameters into EEPROM
 H will print this help message again
 A will toggle on/off showing regulator status every second
-
+</pre>
