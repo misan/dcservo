@@ -30,3 +30,4 @@ A will toggle on/off showing regulator status every second
 
 #tuning tool
 Written in Processing it allows you to see graphically the PID response to a step input while you can tune it by pressing capital P, I and D keys to increase values or p, i and d to lower them.
+![Screenshot](http://i.imgur.com/3c8WySu.png "Tuning tool")
