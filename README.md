@@ -27,3 +27,6 @@ W will store current values of P, I and D parameters into EEPROM
 H will print this help message again
 A will toggle on/off showing regulator status every second
 </pre>
+
+#tuning tool
+Written in Processing it allows you to see graphically the PID response to a step input while you can tune it by pressing capital P, I and D keys to increase values or p, i and d to lower them.
