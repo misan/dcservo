@@ -24,12 +24,13 @@
 #define M1            9
 #define M2            10  // motor's PWM outputs
 
+byte pos[1000]; int p=0;
 
 double kp=3,ki=0,kd=0.0;
-double input=80, output=0, setpoint=180;
+double input=0, output=0, setpoint=0;
 PID myPID(&input, &output, &setpoint,kp,ki,kd, DIRECT);
 volatile long encoder0Pos = 0;
-boolean auto1=false;
+boolean auto1=false, auto2=false,counting=false;
 long previousMillis = 0;        // will store last time LED was updated
 
 long target1=0;  // destination location at any moment
@@ -38,6 +39,7 @@ long target1=0;  // destination location at any moment
 bool newStep = false;
 bool oldStep = false;
 bool dir = false;
+byte skip=0;
 
 // Install Pin change interrupt for a pin, can be called multiple times
 void pciSetup(byte pin) 
@@ -67,11 +69,12 @@ void loop(){
     input = encoder0Pos; 
     setpoint=target1;
     myPID.Compute();
-    // interpret received data as an integer (no CR LR): provision for manual testing over the serial port
     if(Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly 
     pwmOut(output); 
-  if(auto1) if(millis() % 3000 == 0) target1=random(2000); // that was for self test with no input from main controller
-  //if(millis()%1000 == 0) Serial.println(encoder0Pos);
+    if(auto1) if(millis() % 3000 == 0) target1=random(2000); // that was for self test with no input from main controller
+    if(auto2) if(millis() % 1000 == 0) printPos();
+    //if(counting && abs(input-target1)<15) counting=false; 
+    if(counting &&  (skip++ % 5)==0 ) {pos[p]=encoder0Pos; if(p<999) p++; else counting=false;}
 }
 
 void pwmOut(int out) {
@@ -87,7 +90,7 @@ ISR (PCINT0_vect) { // handle pin change interrupt for D8
   encoder0Pos+= QEM [Old * 4 + New];
 }
 
-void encoderInt() { // handle pin change interrupt for D8
+void encoderInt() { // handle pin change interrupt for D2
   Old = New;
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
   encoder0Pos+= QEM [Old * 4 + New];
@@ -103,31 +106,37 @@ void process_line() {
   case 'P': kp=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
   case 'D': kd=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
   case 'I': ki=Serial.parseFloat(); myPID.SetTunings(kp,ki,kd); break;
-  case '?': Serial.print(encoder0Pos); Serial.print(" "); Serial.print(output); Serial.print(" "); Serial.println(setpoint); break;
-  case 'X': target1=Serial.parseInt(); break;
+  case '?': printPos(); break;
+  case 'X': target1=Serial.parseInt(); p=0; counting=true; for(int i=0; i<300; i++) pos[i]=0; break;
   case 'T': auto1 = !auto1; break;
+  case 'A': auto2 = !auto2; break;
   case 'Q': Serial.print("P="); Serial.print(kp); Serial.print(" I="); Serial.print(ki); Serial.print(" D="); Serial.println(kd); break;
   case 'H': help(); break;
   case 'W': writetoEEPROM(); break;
   case 'K': eedump(); break;
   case 'R': recoverPIDfromEEPROM() ; break;
+  case 'S': for(int i=0; i<p; i++) Serial.println(pos[i]); break;
  }
  while(Serial.read()!=10); // dump extra characters till LF is seen (you can use CRLF or just LF)
 }
 
+void printPos() {
+  Serial.print(F("Position=")); Serial.print(encoder0Pos); Serial.print(F(" PID_output=")); Serial.print(output); Serial.print(F(" Target=")); Serial.println(setpoint);
+}
 void help() {
- Serial.println("\nPID DC motor controller and stepper interface emulator");
- Serial.println("by misan");
- Serial.println("Available serial commands: (lines end with CRLF or LF)");
- Serial.println("P123.34 sets proportional term to 123.34");
- Serial.println("I123.34 sets integral term to 123.34");
- Serial.println("D123.34 sets derivative term to 123.34");
- Serial.println("? prints out current encoder, output and setpoint values");
- Serial.println("X123 sets the target destination for the motor to 123 encoder pulses");
- Serial.println("T will start a sequence of random destinations (between 0 and 2000) every 3 seconds. T again will disable that");
- Serial.println("Q will print out the current values of P, I and D parameters"); 
- Serial.println("W will store current values of P, I and D parameters into EEPROM"); 
- Serial.println("H will print this help message again\n"); 
+ Serial.println(F("\nPID DC motor controller and stepper interface emulator"));
+ Serial.println(F("by misan"));
+ Serial.println(F("Available serial commands: (lines end with CRLF or LF)"));
+ Serial.println(F("P123.34 sets proportional term to 123.34"));
+ Serial.println(F("I123.34 sets integral term to 123.34"));
+ Serial.println(F("D123.34 sets derivative term to 123.34"));
+ Serial.println(F("? prints out current encoder, output and setpoint values"));
+ Serial.println(F("X123 sets the target destination for the motor to 123 encoder pulses"));
+ Serial.println(F("T will start a sequence of random destinations (between 0 and 2000) every 3 seconds. T again will disable that"));
+ Serial.println(F("Q will print out the current values of P, I and D parameters")); 
+ Serial.println(F("W will store current values of P, I and D parameters into EEPROM")); 
+ Serial.println(F("H will print this help message again")); 
+ Serial.println(F("A will toggle on/off showing regulator status every second\n")); 
 }
 
 void writetoEEPROM() { // keep PID set values in EEPROM so they are kept when arduino goes off
@@ -148,13 +157,13 @@ void recoverPIDfromEEPROM() {
   cksEE=eeget(12);
   //Serial.println(cks);
   if(cks==cksEE) {
-    Serial.println("*** Found PID values on EEPROM");
+    Serial.println(F("*** Found PID values on EEPROM"));
     kp=eeget(0);
     ki=eeget(4);
     kd=eeget(8);
     myPID.SetTunings(kp,ki,kd); 
   }
-  else Serial.println("*** Bad checksum");
+  else Serial.println(F("*** Bad checksum"));
 }
 
 void eeput(double value, int dir) { // Snow Leopard keeps me grounded to 1.0.6 Arduino, so I have to do this :-(
