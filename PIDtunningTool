@@ -5,6 +5,7 @@
 // p i d keys decrease respective values
 // it draws "almost" in real time motor response
 
+import java.util.*; 
 import processing.serial.*;
 
 Serial myPort;      // The serial port
