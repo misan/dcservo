@@ -72,7 +72,7 @@ void keyPressed() {
       String out=""+kp; for(int i=0; i<out.length();i++) myPort.write(out.charAt(i));
       myPort.write('\r');
       myPort.write('\n');
-      println("p="+kp);
+      println("P="+kp);
   } 
   if(key=='p')  {
     kp-=1; kp=max(0,kp);
@@ -80,7 +80,7 @@ void keyPressed() {
       String out=""+kp; for(int i=0; i<out.length();i++) myPort.write(out.charAt(i));
       myPort.write('\r');
       myPort.write('\n');
-      println("p="+kp);
+      println("P="+kp);
   } 
   if(key=='D') 
    {
@@ -89,7 +89,7 @@ void keyPressed() {
       String out=""+kd; for(int i=0; i<out.length();i++) myPort.write(out.charAt(i));
       myPort.write('\r');
       myPort.write('\n');
-      println("p="+kd);
+      println("D="+kd);
   } 
   if(key=='d')  {
     kd-=0.01; kd=max(0,kd);
