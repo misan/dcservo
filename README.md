@@ -15,6 +15,8 @@ Servostrap project and Michael Ball's work sparked my curiosity to go create a s
 
 I want to thank Brook Drum for his support on this project that started in here: https://www.youmagine.com/designs/dc-motor-closed-loop-control-software
 
+Thanks to Mauro Manco for providing a NodeMCU now there is a version than can work with a ESP12E module, with support to accept commands over Wifi. 
+
 # usage
 <pre>
 Available serial commands: (lines end with CRLF or LF) 
