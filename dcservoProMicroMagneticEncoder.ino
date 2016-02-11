@@ -110,7 +110,7 @@ void loop() {
    else { analogWrite(M2,0); analogWrite(M1,abs(out)); }
   }
 */
-void pwmOut(int out) {W
+void pwmOut(int out) {
   if (out > 0) {
     digitalWrite(M1, 0);
     digitalWrite(M2, 1);
