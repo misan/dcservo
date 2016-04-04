@@ -4,15 +4,18 @@
 // "P",  "I" or "D" keys increase existing PID values
 // p i d keys decrease respective values
 // it draws "almost" in real time motor response
+// modified for longer target values than 100
 
 import java.util.*; 
 import processing.serial.*;
 
 Serial myPort;      // The serial port
 
-float kp=3, ki=1, kd=0.01;
+int targetVal = 2048; // use this to set the target value
+
+float kp=19, ki=0.5, kd=0.17;
 void setup() {
-  size(600, 400);
+  size(800, 400);
   // create a font with the third font available to the system:
   PFont myFont = createFont(PFont.list()[2], 14);
   textFont(myFont);
@@ -20,30 +23,30 @@ void setup() {
   // List all the available serial ports:
   println(Serial.list());
   String portName = Serial.list()[0];
-  myPort = new Serial(this, portName, 115200);
+  myPort = new Serial(this, "/dev/ttyUSB0", 115200);
 }
 
 void draw() {
   strokeWeight(1);
   background(255,100); stroke(255,0,0);
-  line(0,400-300,600,400-300); 
+  line(0,400-333,600,400-333); 
   strokeWeight(.1);
   for(int i=1;i<6;i++) line(i*100,0,i*100,400);
-  delay(500);
+  delay(500 + targetVal / 10);
   stroke(0,0,255); strokeWeight(2); 
   while(myPort.available()>0) print(char(myPort.read()));
-  
+
+ 
   myPort.write('X');
-  myPort.write('1');
-  myPort.write('0');  
-  myPort.write('0');
+  String out = "" + targetVal;
+  for(int i=0; i<out.length();i++) myPort.write(out.charAt(i));
   myPort.write('\r');
   myPort.write('\n');
-  delay(500);
+  delay(500 + targetVal / 10);
   myPort.write('S');
   myPort.write('\r');
   myPort.write('\n');
-  delay(500);
+  delay(500 + targetVal / 10);
   String s="";
   while(myPort.available()>0) s+=char(myPort.read());
   
@@ -53,16 +56,15 @@ void draw() {
   
   int x=0; 
   while(sc.hasNextInt()) {
-    point(x++, 400-3*sc.nextInt());
+    int y = sc.nextInt();
+    point(x++, 400-333*y/targetVal);
   }
 
   myPort.write('X');
-  //myPort.write('0'); 
-  //myPort.write('0');  
   myPort.write('0'); 
   myPort.write('\r');
   myPort.write('\n');
-  delay(0);
+  delay(500 + targetVal / 10);
 }
 
 void keyPressed() {
@@ -115,5 +117,16 @@ void keyPressed() {
       myPort.write('\n');
       println("I="+ki);
   } 
+  if(key=='W')  {
+      myPort.write('W');
+      myPort.write('\r');
+      myPort.write('\n');
+      println("Values stored.");
+  } 
+  if(key=='Q')  {
+      myPort.write('Q');
+      myPort.write('\r');
+      myPort.write('\n');
+      println("Values requested.");
+  } 
 }
-        
