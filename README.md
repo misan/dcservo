@@ -17,6 +17,8 @@ I want to thank Brook Drum for his support on this project that started in here:
 
 Thanks to Mauro Manco for providing a NodeMCU. Now there is a version than can work with a ESP12E module, with support to accept commands over Wifi. Please note EEPROM storage code will not work in this platform :-(
 
+Thanks to Robert Klauco for contributing the version of ATtiny85.
+
 AMS provided free samples of magnetic encoder. Now the AS5600 encoder is supported for 12-bit/revolution resolution. 
 
 # usage
