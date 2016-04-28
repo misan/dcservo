@@ -39,3 +39,6 @@ A will toggle on/off showing regulator status every second
 #tuning tool
 Written in Processing it allows you to see graphically the PID response to a step input while you can tune it by pressing capital P, I and D keys to increase values or p, i and d to lower them.
 ![Screenshot](http://i.imgur.com/3c8WySu.png "Tuning tool")
+
+#trapezoidal motion profile
+I reckon the evolution of this project is to offload motion profile generation off main processor. In order to do that firmware needs to be able to achieve motion in a controlled way (which is key for joint axis movement). The first and simpler idea is to use a trapezoidal motion pattern.
