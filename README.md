@@ -44,7 +44,9 @@ Written in Processing it allows you to see graphically the PID response to a ste
 I reckon the evolution of this project is to offload motion profile generation off main processor. In order to do that firmware needs to be able to achieve motion in a controlled way (which is key for joint axis movement). The first and simpler idea is to use a trapezoidal motion pattern.
 
 New commands have been added for this feature: 
+<pre>
 F<max_velocity>
 @<acceleration>
 Y<destination> 
+</pre>
 The latter is to perform the actual movement to an absolute destination, measured in encoder counts, using a trapezoidal speed motion pattern. No optimization effort in the math has yet been done.
