@@ -22,7 +22,7 @@ Thanks to Robert Klauco for contributing the version for ATtiny85.
 AMS provided free samples of magnetic encoder. Now the AS5600 encoder is supported for 12-bit/revolution resolution. 
 
 # usage
-<pre>
+```
 Available serial commands: (lines end with CRLF or LF) 
 P123.34 sets proportional term to 123.34
 I123.34 sets integral term to 123.34
@@ -34,7 +34,7 @@ Q will print out the current values of P, I and D parameters
 W will store current values of P, I and D parameters into EEPROM
 H will print this help message again
 A will toggle on/off showing regulator status every second
-</pre>
+```
 
 #tuning tool
 Written in Processing it allows you to see graphically the PID response to a step input while you can tune it by pressing capital P, I and D keys to increase values or p, i and d to lower them.
@@ -44,9 +44,9 @@ Written in Processing it allows you to see graphically the PID response to a ste
 I reckon the evolution of this project is to offload motion profile generation off main processor. In order to do that firmware needs to be able to achieve motion in a controlled way (which is key for joint axis movement). The first and simpler idea is to use a trapezoidal motion pattern.
 
 New commands have been added for this feature: 
-<pre>
+```
 F<max_velocity>
 @<acceleration>
 Y<destination> 
-</pre>
+```
 The latter is to perform the actual movement to an absolute destination, measured in encoder counts, using a trapezoidal speed motion pattern. No optimization effort in the math has yet been done.
