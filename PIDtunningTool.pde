@@ -11,7 +11,8 @@ import processing.serial.*;
 
 Serial myPort;      // The serial port
 
-int targetVal = 2048; // use this to set the target value
+int targetVal = 220; // use this to set the target value
+//please note the warparound effect on th graph if using values > 255 as Arduino only recording 8 bits location values :-(
 
 float kp=19, ki=0.5, kd=0.17;
 void setup() {
@@ -22,8 +23,8 @@ void setup() {
   frameRate(1);
   // List all the available serial ports:
   println(Serial.list());
-  String portName = Serial.list()[0];
-  myPort = new Serial(this, "/dev/ttyUSB0", 115200);
+  String portName = Serial.list()[3];
+  myPort = new Serial(this, portName, 115200);
 }
 
 void draw() {
@@ -56,8 +57,9 @@ void draw() {
   
   int x=0; 
   while(sc.hasNextInt()) {
-    int y = sc.nextInt();
-    point(x++, 400-333*y/targetVal);
+    float y = sc.nextInt();
+    float c = map (y,0,targetVal<255 ? targetVal : 255,0,300);
+    point(x++, 400-c);
   }
 
   myPort.write('X');
