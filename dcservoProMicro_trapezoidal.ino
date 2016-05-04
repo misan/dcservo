@@ -14,8 +14,7 @@
    Digital output 9 is PWM motor control
 
 
-   NOTES: 1- An experimental joint speed+position control loop is added.
-          2- A new command 'Y' has been added to achieve trapezoidal speed motion pattern (speed and acceleration can be set before each movement).
+   Please note PID gains kp, ki, kd need to be tuned to each different setup.
 */
 // for 16-bit PWM on pin 9
 #define PWM OCR1A
@@ -29,7 +28,7 @@
 #define M1            6  // No motor's PWM outputs
 #define M2            7  // just set the direction
 
-byte pos[1000]; int p = 0;
+int pos[1000]; int p = 0;
 
 double kp = 3, ki = 0, kd = 0.0;
 double feed = 50;
@@ -70,6 +69,7 @@ void setup() {
     TCCR1A = 0b10101010;
     TCCR1B = 0b00011001;
     PWM=0; */
+  //pinMode(0,OUTPUT); // eliminar
   attachInterrupt(2, countStep      , RISING);  // step  input on interrupt 2 - pin 0
   TCCR1B = TCCR1B & 0b11111000 | 1; // set 31Kh PWM
   Serial.begin (115200);
@@ -91,17 +91,16 @@ void loop() {
   setpoint = target1;
   myPID.Compute();
   setspeed = output;
-  speed.Compute();
   if (Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly
-  pwmOut(motor);
   if (auto1) if (millis() % 1000 == 0) trapezoidal(random(6000)); //target1 = random(2000); // that was for self test with no input from main controller
   if (auto2) if (millis() % 1000 == 0) printPos();
   //if(counting && abs(input-target1)<15) counting=false;
-  if (counting &&  (skip++ % 5) == 0 ) {
+  if (  speed.Compute() && counting ) { // only sample when PID updates
     pos[p] = encoder0Pos;
     if (p < 999) p++;
     else counting = false;
   }
+    pwmOut(motor);
 }
 
 /*
@@ -160,7 +159,7 @@ void process_line() {
     case 'F': feed = Serial.parseFloat(); break;
     case 'V': vkp = Serial.parseFloat(); speed.SetTunings(vkp, vki, vkd); break;
     case 'G': vki = Serial.parseFloat(); speed.SetTunings(vkp, vki, vkd); break;
-    case 'Y': trapezoidal(Serial.parseInt()); break; // performs a trapezoidal move
+    case 'Y': counting = true; for (int i = 0; i < p; i++) pos[i] = 0; p = 0; trapezoidal(Serial.parseInt()); break; // performs a trapezoidal move
     case '@': accel = Serial.parseFloat(); break;
   }
   while (Serial.read() != 10); // dump extra characters till LF is seen (you can use CRLF or just LF)
@@ -184,10 +183,10 @@ void help() {
   Serial.println(F("H will print this help message again"));
   Serial.println(F("A will toggle on/off showing regulator status every second"));
   Serial.println(F("F sets desired motion speed"));
-  Serial.println(F("V sets speed proportional gain\n"));
-  Serial.println(F("G sets speed integral gain\n"));
-  Serial.println(F("Y123.34 it is like X but using trapezoidal motion\n"));
-  Serial.println(F("@123.34 sets [trapezoidal] acceleration\n"));
+  Serial.println(F("V sets speed proportional gain"));
+  Serial.println(F("G sets speed integral gain"));
+  Serial.println(F("Y123.34 it is like X but using trapezoidal motion"));
+  Serial.println(F("@123.34 sets [trapezoidal] acceleration"));
   Serial.println(F("Z disables STEP input"));
 }
 
@@ -262,16 +261,23 @@ void trapezoidal(int destination) { // it will use acceleration and feed values 
   while (t < maxt) {
     t += dt;
     if (t < t1) spd += da; else if (t >= t2) spd -= da;
-    if ( dirPos) covered += spd * dt; else covered -= spd * dt; // calculate new target position
+    if ( dirPos ) covered += spd * dt; else covered -= spd * dt; // calculate new target position
     //vel =  encoder0Pos - input;
     input = encoder0Pos;
     setpoint = covered;
-    myPID.Compute();
+    while(!myPID.Compute()); // espero a que termine el cálculo
     setspeed = output;
     //speed.Compute();
     pwmOut(output );
+    //digitalWrite(0,1-digitalRead(0));; just for time tracing purposes
+    // record data for S command
+    if (counting  ) {
+      pos[p] = encoder0Pos;
+      if (p < 999) p++;
+      else counting = false;
+    }
   }
-  Serial.print(millis() - a1); Serial.print(F("  Err=")); Serial.println(encoder0Pos-covered);
+  //Serial.print(millis() - a1); Serial.print(F("  Err=")); Serial.println(encoder0Pos - covered);
   target1 = covered;
 }
 
