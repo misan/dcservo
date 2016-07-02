@@ -22,21 +22,19 @@ const int DIR = 4;
 const int PWM_MOT = 15;
 
 byte pos[1000]; int p = 0;
+byte maxPower = 255;
 double kp = 12, ki = 4, kd = 0.01;
 double input = 0, output = 0, setpoint = 0;
 PID myPID(&input, &output, &setpoint, kp, ki, kd, DIRECT);
 //volatile long encoder0Pos = 0;
 long pos1;
 
-boolean auto1 = false, auto2 = false, counting = false;
+boolean auto1 = false, auto2 = true, counting = false;
 long previousMillis = 0;        // will store last time LED was updated
 
 long target1 = 0; // destination location at any moment
 
 //for motor control ramps 1.4
-bool newStep = false;
-bool oldStep = false;
-bool dir = false;
 byte skip = 0;
 int angle, diff;
 double before = 0;
@@ -47,28 +45,25 @@ void setup() {
   pinMode(13, OUTPUT);
   pinMode(M1, OUTPUT);
   pinMode(M2, OUTPUT);
-  
+
   TCCR1B = TCCR1B & 0b11111000 | 1; // set 31Kh PWM
 
   recoverPIDfromEEPROM();
   //Setup the pid
   myPID.SetMode(AUTOMATIC);
   myPID.SetSampleTime(1);
-  myPID.SetOutputLimits(-255, 255);
+  myPID.SetOutputLimits((-1) * maxPower, maxPower);
 
   Wire.begin(); // start I2C driver code
   help();
 }
 
-
-
-
 void loop() {
-  angle = readTwoBytes() / 10; //analogRead(A0); // encoder0Pos;
+  angle = readTwoBytes() >> 2; //analogRead(A0); // encoder0Pos;
   // process encoder rollover
   diff = angle - before;
-  if (diff < -350) pos1 += 409;
-  else if (diff > 350) pos1 -= 409;
+  if (diff < -768) pos1 += 1024;
+  else if (diff > 768) pos1 -= 1024;
   before = angle;
   input = pos1 + angle;
 
@@ -80,7 +75,7 @@ void loop() {
   if (auto1) if (millis() % 3000 == 0) target1 = random(2000); // that was for self test with no input from main controller
   if (auto2) if (millis() % 1000 == 0) printPos();
   if (counting && abs(input - target1) < 15) counting = false;
-  if (counting &&  (skip++ % 5) == 0 ) {
+  if (counting &&  (skip++ % 2) == 0 ) {
     pos[p] = input;
     if (p < 999) p++;
     else counting = false;
@@ -128,7 +123,7 @@ void pwmOut(int out) {
 }
 
 void printPos() {
-  Serial.print(F("Position=")); Serial.print(input); Serial.print(F(" PID_output=")); Serial.print(output); Serial.print(F(" Target=")); Serial.println(setpoint);
+  Serial.print(F("Position=")); Serial.print(input); Serial.print(F(" PID_output=")); Serial.print(output); Serial.print(F(" Target=")); Serial.print(setpoint); Serial.print(F(" Before=")); Serial.print(before); Serial.print(F(" Angle=")); Serial.println(angle);
 }
 
 void help() {
@@ -138,6 +133,7 @@ void help() {
   Serial.println(F("P123.34 sets proportional term to 123.34"));
   Serial.println(F("I123.34 sets integral term to 123.34"));
   Serial.println(F("D123.34 sets derivative term to 123.34"));
+  Serial.println(F("M123 sets maximum motor power"));
   Serial.println(F("? prints out current encoder, output and setpoint values"));
   Serial.println(F("X123 sets the target destination for the motor to 123 encoder pulses"));
   Serial.println(F("T starts a sequence of random destinations (between 0 and 2000) every 3 seconds. T again will disable that"));
@@ -204,6 +200,7 @@ void process_line() {
     case 'P': kp = Serial.parseFloat(); myPID.SetTunings(kp, ki, kd); break;
     case 'D': kd = Serial.parseFloat(); myPID.SetTunings(kp, ki, kd); break;
     case 'I': ki = Serial.parseFloat(); myPID.SetTunings(kp, ki, kd); break;
+    case 'M': maxPower = Serial.parseInt(); myPID.SetOutputLimits((-1) * maxPower, maxPower); break;
     case '?': printPos(); break;
     case 'X': target1 = Serial.parseInt(); counting = true; for (int i = 0; i < p; i++) pos[i] = 0; p = 0; break;
     case 'T': auto1 = !auto1; break;

@@ -32,11 +32,11 @@ static byte newPort;
 // Y axis config: 
 // const double kp = 12, ki = 8, kd = 0.02;
 // X axis config:
-// const double kp = 12, ki = 4, kd = 0.02;
+const double kp = 12, ki = 4, kd = 0.02;
 // Z axis config
-const double kp = 12, ki = 8, kd = 0.02;
+// const double kp = 12, ki = 8, kd = 0.02;
 #undef stepKoef
-#define stepKoef
+// #define stepKoef 5
 //#undef minSearch
 #define minSearch
 
@@ -143,19 +143,19 @@ ISR(PCINT0_vect)
     #ifndef stepKoef
     target1 += (newPort & 0b100000) ? -1 : 1;
     #else
-    target1 += (newPort & 0b100000) ? -5 : 5;
+    target1 += (newPort & 0b100000) ? -1 * stepKoef : stepKoef;
     #endif
   }
 }
 
 void pwmOut(int out) {
   if (out < 0) {
-    analogWrite(M1, 0);
-    analogWrite(M2, abs(out));
+    analogWrite(M2, 255);
+    analogWrite(M1, 255 - abs(out));
   }
   else {
-    analogWrite(M1, abs(out));
-    analogWrite(M2, 0);
+    analogWrite(M2, 255 - abs(out));
+    analogWrite(M1, 255);
   }
 }
 
@@ -218,6 +218,9 @@ void getMinimal() {
     }
     pwmOut(0);
     encoder0Pos = -75;
+    #ifdef stepKoef
+    encoder0Pos = -75 * stepKoef;
+    #endif
   #endif
 }
 

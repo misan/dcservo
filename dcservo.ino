@@ -117,7 +117,7 @@ void setup() {
   // to ensure we will move
   // we will increase the minimal moving speed
   // by 25% of the difference to maximum speed
-  minSpeed = abs(minSpeed) + (255 - abs(minSpeed)) / 4;
+  minSpeed = abs(minSpeed) + (255 - abs(minSpeed)) / 5;
 
   Serial.print("Adjusted movement speed: ");
   Serial.println(minSpeed);
