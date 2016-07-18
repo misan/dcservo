@@ -89,7 +89,7 @@ void loop() {
   vel =  encoder0Pos - input;
   input = encoder0Pos;
   setpoint = target1;
-  myPID.Compute();
+  while(!myPID.Compute()); // wait till PID is actually computed
   setspeed = output;
   if (Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly
   if (auto1) if (millis() % 1000 == 0) trapezoidal(random(6000)); //target1 = random(2000); // that was for self test with no input from main controller
