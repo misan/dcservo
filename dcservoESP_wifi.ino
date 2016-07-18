@@ -217,8 +217,7 @@ void loop() {
     if(!client) client = server.available();
     input = encoder0Pos; 
     setpoint=target1;
-    myPID.Compute();
-    //if(Serial.available()) process_line();
+    while(!myPID.Compute()); // wait till PID is actually computed
     if(client && client.available()) process_line();
     pwmOut(output); 
     if(auto1) if(millis() % 3000 == 0) target1=random(2000); // that was for self test with no input from main controller
