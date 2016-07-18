@@ -246,7 +246,7 @@ void loop() {
     if(!client) client = server.available();
     //input = encoder0Pos; 
     setpoint=target1;
-    myPID.Compute();
+    while(!myPID.Compute()); // wait till PID is actually computed
     //if(Serial.available()) process_line();
     if(client && client.available()) process_line();
     pwmOut(output); 
