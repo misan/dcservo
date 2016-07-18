@@ -91,7 +91,7 @@ void loop() {
   input = pos1 + angle;
   
   setpoint = target1;
-  myPID.Compute();
+  while(!myPID.Compute()); // wait till PID is actually computed
   if (Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly
   pwmOut(output);
   if (auto1) if (millis() % 3000 == 0) target1 = random(20000); // that was for self test with no input from main controller
