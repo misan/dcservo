@@ -1,4 +1,4 @@
-/*
+/* 
    Miguel Sanchez 2106
    This program uses an Arduino Pro Micro variant for a closed-loop control of a DC-motor.
    Motor motion is detected by a quadrature encoder.
