@@ -12,6 +12,7 @@
    Digital inputs 2 & 8 are connected to the two encoder signals (AB).
    Digital input 3 is the STEP input.
    Analog input 0 is the DIR input.
+   Digital input 4 is the HOME output. asserted if encoder0Pos is smaller than one.
    Digital outputs 9 & 10 control the PWM outputs for the motor (I am using half L298 here).
 
 
@@ -23,13 +24,14 @@
 #define encoder0PinB  8  // PC0;
 #define M1            9
 #define M2            10  // motor's PWM outputs
-#define ENDSTOP 3
+#define ENDSTOP 4
 byte pos[1000]; int p=0;
 
 double kp=3,ki=0,kd=0.0;
 double input=0, output=0, setpoint=0;
 PID myPID(&input, &output, &setpoint,kp,ki,kd, DIRECT);
 volatile long encoder0Pos = 0;
+volatile boolean isHome=true;
 boolean auto1=false, auto2=false,counting=false;
 long previousMillis = 0;        // will store last time LED was updated
 
@@ -64,14 +66,15 @@ void setup() {
   myPID.SetMode(AUTOMATIC);
   myPID.SetSampleTime(1);
   myPID.SetOutputLimits(-255,255);
-  homing(); // 
+  homing(); // comment if you don't want homming on reset
+  help(); // display help 
 } 
 
 /*  enables to detect obstacles such as hard stops or soft rubber stops 
  *  without the use of a limit switch since it looks at the growing error 
  *  when such an event occurs.  
- *  an output pin is asserted after stop is detected for 2 seconds.
- *  homing written by Alain Pelletier  
+ *  an output pin is asserted after stop is detected for 2 seconds
+ *  
  *  
  */
 void homing(){
@@ -98,12 +101,7 @@ void homing(){
     pwmOut(output*homing_power); 
   }
   encoder0Pos=-70; // detected limit is now -70 to (if a soft limit is set like rubber motor would always try to push if zer0)
-  target1=0;
-  digitalWrite(ENDSTOP,1); // assert output pin for 2 seconds
-  help(); // display help while waiting for the pin assertion
-  delay(2000);
-  digitalWrite(ENDSTOP,0);
-  
+  target1=0; // target is now the new zero 
 }
 
 
@@ -130,12 +128,41 @@ ISR (PCINT0_vect) { // handle pin change interrupt for D8
   Old = New;
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
   encoder0Pos+= QEM [Old * 4 + New];
+
+  // endstop detection.  it is interlocked.  under normal operation it would not
+  // send a digital write, just on transition between smaller or equal to 0 and not 0;
+  // this would not significantly affect normal operation
+  if(encoder0Pos<=0&&!isHome)  
+      {
+        isHome=true; 
+        digitalWrite(ENDSTOP,isHome);
+      }
+  else if(encoder0Pos>0&&isHome)
+      {
+        isHome=false; 
+        digitalWrite(ENDSTOP,isHome);
+      }
+
 }
 
 void encoderInt() { // handle pin change interrupt for D2
   Old = New;
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
   encoder0Pos+= QEM [Old * 4 + New];
+
+  // endstop detection.  it is interlocked.  under normal operation it would not
+  // send a digital write, just on transition between smaller or equal to 0 and not 0;
+  // this would not significantly affect normal operation
+  if(encoder0Pos<=0&&!isHome)  
+      {
+        isHome=true; 
+        digitalWrite(ENDSTOP,isHome);
+      }
+  else if(encoder0Pos>0&&isHome)
+      {
+        isHome=false; 
+        digitalWrite(ENDSTOP,isHome);
+      }
 }
 
 
@@ -164,8 +191,11 @@ void process_line() {
 }
 
 void printPos() {
-  Serial.print(F("Position=")); Serial.print(encoder0Pos); Serial.print(F(" PID_output=")); Serial.print(output); Serial.print(F(" Target=")); Serial.println(setpoint);
+  Serial.print(F("Position=")); Serial.print(encoder0Pos); Serial.print(F(" PID_output=")); 
+  Serial.print(output); Serial.print(F(" Target=")); Serial.print(setpoint);
+  if(!isHome)  Serial.print(" NOT");  Serial.println(" home");
 }
+
 void help() {
  Serial.println(F("\nPID DC motor controller and stepper interface emulator"));
  Serial.println(F("by misan"));
