@@ -23,7 +23,7 @@
 #define encoder0PinB  8  // PC0;
 #define M1            9
 #define M2            10  // motor's PWM outputs
-
+#define ENDSTOP 3
 byte pos[1000]; int p=0;
 
 double kp=3,ki=0,kd=0.0;
@@ -52,6 +52,7 @@ void pciSetup(byte pin)
 void setup() { 
   pinMode(encoder0PinA, INPUT); 
   pinMode(encoder0PinB, INPUT);  
+  pinMode(ENDSTOP, OUTPUT);  
   pciSetup(encoder0PinB);
   attachInterrupt(0, encoderInt, CHANGE);  // encoder pin on interrupt 0 - pin 2
   attachInterrupt(1, countStep      , RISING);  // step  input on interrupt 1 - pin 3
@@ -63,16 +64,56 @@ void setup() {
   myPID.SetMode(AUTOMATIC);
   myPID.SetSampleTime(1);
   myPID.SetOutputLimits(-255,255);
+  homing(); // 
 } 
+
+/*  enables to detect obstacles such as hard stops or soft rubber stops 
+ *  without the use of a limit switch since it looks at the growing error 
+ *  when such an event occurs.  
+ *  an output pin is asserted after stop is detected for 2 seconds.
+ *  homing written by Alain Pelletier  
+ *  
+ */
+void homing(){
+  long tstamp;    
+  long error=0;
+  int scanning_steps=15; // how fast you want to scan for home
+  int max_error;
+  float homing_power=0.6;  // power multiplicator for homing. suggested between 0.1 for 10% and 1 for 100%
+  max_error=(scanning_steps*7+1);
+  digitalWrite(ENDSTOP,0);  // Turn external pin low
+  Serial.println("homing ...");
+    while( error>-max_error){   // loop while error is less than max_error an obstacle or rubber stopper will make the error increase at each interval
+      if(millis()-tstamp>6) // decreasetarget at desired time interval (6 default) 
+        {
+          setpoint-=scanning_steps;   //decrease target
+          tstamp=millis();  //stamp the time
+          Serial.print("setpoint ");          Serial.print(setpoint);
+          Serial.print(" encoder ");          Serial.print(input);
+          Serial.print(" error ");          Serial.println(error);
+        }
+    input = encoder0Pos;
+    error=setpoint-input;  
+    while(!myPID.Compute()); // wait till PID is actually computed
+    pwmOut(output*homing_power); 
+  }
+  encoder0Pos=-70; // detected limit is now -70 to (if a soft limit is set like rubber motor would always try to push if zer0)
+  target1=0;
+  digitalWrite(ENDSTOP,1); // assert output pin for 2 seconds
+  help(); // display help while waiting for the pin assertion
+  delay(2000);
+  digitalWrite(ENDSTOP,0);
+  
+}
+
 
 void loop(){
     input = encoder0Pos; 
     setpoint=target1;
     while(!myPID.Compute()); // wait till PID is actually computed
     if(Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly 
-    if(input==setpoint)pwmOut(0);  // target reached destination and motor does not need to be energized
-		else pwmOut(output); 		 
-    if(auto1) if(millis() % 3000 == 0) target1=random(2000); // that was for self test with no input from main controller
+    if(input==setpoint)pwmOut(0); else pwmOut(output); 
+    if(auto1) if(millis() % 3000 == 0) target1=random(9000); // that was for self test with no input from main controller
     if(auto2) if(millis() % 1000 == 0) printPos();
     //if(counting && abs(input-target1)<15) counting=false; 
     if(counting &&  (skip++ % 5)==0 ) {pos[p]=encoder0Pos; if(p<999) p++; else counting=false;}
@@ -117,6 +158,7 @@ void process_line() {
   case 'K': eedump(); break;
   case 'R': recoverPIDfromEEPROM() ; break;
   case 'S': for(int i=0; i<p; i++) Serial.println(pos[i]); break;
+  case 'L': homing(); break;
  }
  while(Serial.read()!=10); // dump extra characters till LF is seen (you can use CRLF or just LF)
 }
@@ -137,7 +179,8 @@ void help() {
  Serial.println(F("Q will print out the current values of P, I and D parameters")); 
  Serial.println(F("W will store current values of P, I and D parameters into EEPROM")); 
  Serial.println(F("H will print this help message again")); 
- Serial.println(F("A will toggle on/off showing regulator status every second\n")); 
+ Serial.println(F("A will toggle on/off showing regulator status every second")); 
+ Serial.println(F("L will execute homing\n")); 
 }
 
 void writetoEEPROM() { // keep PID set values in EEPROM so they are kept when arduino goes off
@@ -182,3 +225,4 @@ double eeget(int dir) { // Snow Leopard keeps me grounded to 1.0.6 Arduino, so I
 void eedump() {
  for(int i=0; i<16; i++) { Serial.print(EEPROM.read(i),HEX); Serial.print(" "); }Serial.println(); 
 }
+
