@@ -112,7 +112,7 @@ void loop(){
     while(!myPID.Compute()); // wait till PID is actually computed
     if(Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly 
     if(input==setpoint)pwmOut(0); else pwmOut(output); 
-    if(auto1) if(millis() % 1000 == 0) target1=random(9000); // that was for self test with no input from main controller
+    if(auto1) if(millis() % 3000 == 0) target1=random(9000); // that was for self test with no input from main controller
     if(auto2) if(millis() % 1000 == 0) printPos();
     //if(counting && abs(input-target1)<15) counting=false; 
     if(counting &&  (skip++ % 5)==0 ) {pos[p]=encoder0Pos; if(p<999) p++; else counting=false;}
