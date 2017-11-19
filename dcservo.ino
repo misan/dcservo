@@ -132,7 +132,9 @@ ISR (PCINT0_vect) { // handle pin change interrupt for D8
   // endstop detection.  it is interlocked.  under normal operation it would not
   // send a digital write, just on transition between smaller or equal to 0 and not 0;
   // this would not significantly affect normal operation
-  if(encoder0Pos<=0&&!isHome)  
+  if(encoder0Pos<2)
+    {
+      if(encoder0Pos<=0&&!isHome)  
       {
         isHome=true; 
         digitalWrite(ENDSTOP,isHome);
@@ -142,6 +144,7 @@ ISR (PCINT0_vect) { // handle pin change interrupt for D8
         isHome=false; 
         digitalWrite(ENDSTOP,isHome);
       }
+    }
 
 }
 
@@ -151,9 +154,11 @@ void encoderInt() { // handle pin change interrupt for D2
   encoder0Pos+= QEM [Old * 4 + New];
 
   // endstop detection.  it is interlocked.  under normal operation it would not
-  // send a digital write, just on transition between smaller or equal to 0 and not 0;
-  // this would not significantly affect normal operation
-  if(encoder0Pos<=0&&!isHome)  
+  // send a digital write, just on transition between smaller than 2;
+  // this would not significantly affect normal operation. 
+  if(encoder0Pos<2)
+    {
+      if(encoder0Pos<=0&&!isHome)  
       {
         isHome=true; 
         digitalWrite(ENDSTOP,isHome);
@@ -163,6 +168,7 @@ void encoderInt() { // handle pin change interrupt for D2
         isHome=false; 
         digitalWrite(ENDSTOP,isHome);
       }
+    }
 }
 
 
