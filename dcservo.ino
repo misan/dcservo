@@ -31,7 +31,7 @@ double kp=3,ki=0,kd=0.0;
 double input=0, output=0, setpoint=0;
 PID myPID(&input, &output, &setpoint,kp,ki,kd, DIRECT);
 volatile long encoder0Pos = 0;
-volatile boolean isHome=true;
+boolean isHome=true;
 boolean auto1=false, auto2=false,counting=false;
 long previousMillis = 0;        // will store last time LED was updated
 
@@ -82,7 +82,8 @@ void homing(){
   long error=0;
   int scanning_steps=15; // how fast you want to scan for home
   int max_error;
-  float homing_power=0.6;  // power multiplicator for homing. suggested between 0.1 for 10% and 1 for 100%
+  float homing_power=0.7l
+  ;  // power multiplicator for homing. suggested between 0.1 for 10% and 1 for 100%
   max_error=(scanning_steps*7+1);
   digitalWrite(ENDSTOP,0);  // Turn external pin low
   Serial.println("homing ...");
@@ -115,6 +116,7 @@ void loop(){
     if(auto2) if(millis() % 1000 == 0) printPos();
     //if(counting && abs(input-target1)<15) counting=false; 
     if(counting &&  (skip++ % 5)==0 ) {pos[p]=encoder0Pos; if(p<999) p++; else counting=false;}
+    endstop(); // output status of endstop
 }
 
 void pwmOut(int out) {
@@ -129,23 +131,6 @@ ISR (PCINT0_vect) { // handle pin change interrupt for D8
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
   encoder0Pos+= QEM [Old * 4 + New];
 
-  // endstop detection.  it is interlocked.  under normal operation it would not
-  // send a digital write, just on transition between smaller than 2;
-  // this would not significantly affect normal operation. 
-  if(encoder0Pos<2)
-    {
-      if(encoder0Pos<=0&&!isHome)  
-      {
-        isHome=true; 
-        digitalWrite(ENDSTOP,isHome);
-      }
-  else if(encoder0Pos>0&&isHome)
-      {
-        isHome=false; 
-        digitalWrite(ENDSTOP,isHome);
-      }
-    }
-
 }
 
 void encoderInt() { // handle pin change interrupt for D2
@@ -153,22 +138,6 @@ void encoderInt() { // handle pin change interrupt for D2
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
   encoder0Pos+= QEM [Old * 4 + New];
 
-  // endstop detection.  it is interlocked.  under normal operation it would not
-  // send a digital write, just on transition between smaller than 2;
-  // this would not significantly affect normal operation. 
-  if(encoder0Pos<2)
-    {
-      if(encoder0Pos<=0&&!isHome)  
-      {
-        isHome=true; 
-        digitalWrite(ENDSTOP,isHome);
-      }
-  else if(encoder0Pos>0&&isHome)
-      {
-        isHome=false; 
-        digitalWrite(ENDSTOP,isHome);
-      }
-    }
 }
 
 
@@ -262,3 +231,21 @@ void eedump() {
  for(int i=0; i<16; i++) { Serial.print(EEPROM.read(i),HEX); Serial.print(" "); }Serial.println(); 
 }
 
+void endstop (){
+   // endstop detection.  it is interlocked.  under normal operation it would not
+  // send a digital write, just on transition smaller than 2;
+  // this would not significantly affect normal operation. 
+  if(encoder0Pos<2)
+    {
+      if(encoder0Pos<=0&&!isHome)  
+      {
+        isHome=true; 
+        digitalWrite(ENDSTOP,isHome);
+      }
+  else if(encoder0Pos>0&&isHome)
+      {
+        isHome=false; 
+        digitalWrite(ENDSTOP,isHome);
+      }
+    }
+}
