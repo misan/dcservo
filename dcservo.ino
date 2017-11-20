@@ -25,6 +25,8 @@
 #define M1            9
 #define M2            10  // motor's PWM outputs
 #define ENDSTOP 4
+#define STEP 3
+
 byte pos[1000]; int p=0;
 
 double kp=3,ki=0,kd=0.0;
@@ -52,9 +54,10 @@ void pciSetup(byte pin)
 }
 
 void setup() { 
-  pinMode(encoder0PinA, INPUT); 
-  pinMode(encoder0PinB, INPUT);  
+  pinMode(encoder0PinA, INPUT_PULLUP); 
+  pinMode(encoder0PinB, INPUT_PULLUP);  
   pinMode(ENDSTOP, OUTPUT);  
+  pinMode(STEP, INPUT_PULLUP);  
   pciSetup(encoder0PinB);
   attachInterrupt(0, encoderInt, CHANGE);  // encoder pin on interrupt 0 - pin 2
   attachInterrupt(1, countStep      , RISING);  // step  input on interrupt 1 - pin 3
@@ -80,15 +83,14 @@ void setup() {
 void homing(){
   long tstamp;    
   long error=0;
-  int scanning_steps=15; // how fast you want to scan for home
+  int scanning_steps=20; // how fast you want to scan for home
   int max_error;
-  float homing_power=0.7l
-  ;  // power multiplicator for homing. suggested between 0.1 for 10% and 1 for 100%
-  max_error=(scanning_steps*7+1);
+  float homing_power=1.00;  // power multiplicator for homing. suggested between 0.1 for 10% and 1 for 100%
+  max_error=(scanning_steps*10+1);
   digitalWrite(ENDSTOP,0);  // Turn external pin low
   Serial.println("homing ...");
     while( error>-max_error){   // loop while error is less than max_error an obstacle or rubber stopper will make the error increase at each interval
-      if(millis()-tstamp>6) // decreasetarget at desired time interval (6 default) 
+      if(millis()-tstamp>7) // decreasetarget at desired time interval (6 default) 
         {
           setpoint-=scanning_steps;   //decrease target
           tstamp=millis();  //stamp the time
@@ -101,7 +103,7 @@ void homing(){
     while(!myPID.Compute()); // wait till PID is actually computed
     pwmOut(output*homing_power); 
   }
-  encoder0Pos=-70; // detected limit is now -70 to (if a soft limit is set like rubber motor would always try to push if zer0)
+  encoder0Pos=-50; // detected limit is now -70 to (if a soft limit is set like rubber motor would always try to push if zer0)
   target1=0; // target is now the new zero 
 }
 
@@ -109,7 +111,8 @@ void homing(){
 void loop(){
     input = encoder0Pos; 
     setpoint=target1;
-    while(!myPID.Compute()); // wait till PID is actually computed
+    while(!myPID.Compute())
+           {endstop();} // wait till PID is actually computed in the mean time assert the endstop pins
     if(Serial.available()) process_line(); // it may induce a glitch to move motion, so use it sparingly 
     if(input==setpoint)pwmOut(0); else pwmOut(output); 
     if(auto1) if(millis() % 1000 == 0) target1=random(9000); // that was for self test with no input from main controller
@@ -127,16 +130,16 @@ void pwmOut(int out) {
 const int QEM [16] = {0,-1,1,2,1,0,2,-1,-1,2,0,1,2,1,-1,0};               // Quadrature Encoder Matrix
 static unsigned char New, Old;
 ISR (PCINT0_vect) { // handle pin change interrupt for D8
-  Old = New;
+  Old = New << 2;
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
-  encoder0Pos+= QEM [Old * 4 + New];
+  encoder0Pos+= QEM [Old + New];
 
 }
 
 void encoderInt() { // handle pin change interrupt for D2
-  Old = New;
+  Old = New << 2;
   New = (PINB & 1 )+ ((PIND & 4) >> 1); //
-  encoder0Pos+= QEM [Old * 4 + New];
+  encoder0Pos+= QEM [Old + New];
 
 }
 
