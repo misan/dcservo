@@ -21,6 +21,10 @@ Thanks to Robert Klauco for contributing the version for ATtiny85.
 
 AMS provided free samples of magnetic encoder. Now the AS5600 encoder is supported for 12-bit/revolution resolution. 
 
+It is possible to detect endstops without the use of switches.  If seeking an endstop upon reset is not necessary, this option can be commented out within setup(). It moves the motor in the negative direction at a lesser power level until an obstacle makes the error go up.  This is the new endstop and a Zero offset can be added.  Pin 4 is asserted if the position is now Zero or negative. Pin 4 is reset if the the position is positive.  If the option A is active, the status of the home pin can be seen.
+
+A video of hard homing can be seen https://youtu.be/kTUaKS-4Spc
+
 # usage
 ```
 Available serial commands: (lines end with CRLF or LF) 
@@ -34,6 +38,7 @@ Q will print out the current values of P, I and D parameters
 W will store current values of P, I and D parameters into EEPROM
 H will print this help message again
 A will toggle on/off showing regulator status every second
+L will execute homing
 ```
 
 #tuning tool
