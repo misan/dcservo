@@ -19,6 +19,8 @@ Thanks to Mauro Manco for providing a NodeMCU. Now there is a version than can w
 
 Thanks to Robert Klauco for contributing the version for ATtiny85.
 
+Allain Pelletier kindly provided the virtual end-stop feature code.
+
 AMS provided free samples of magnetic encoder. Now the AS5600 encoder is supported for 12-bit/revolution resolution. 
 
 It is possible to detect endstops without the use of switches.  If seeking an endstop upon reset is not necessary, this option can be commented out within setup(). It moves the motor in the negative direction at a lesser power level until an obstacle makes the error go up.  This is the new endstop and a Zero offset can be added.  Pin 4 is asserted if the position is now Zero or negative. Pin 4 is reset if the the position is positive.  If the option A is active, the status of the home pin can be seen.
