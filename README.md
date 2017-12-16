@@ -27,10 +27,10 @@ It is possible to detect endstops without the use of switches.  If seeking an en
 
 A video of hard homing can be seen https://youtu.be/kTUaKS-4Spc
 
-#Output stage
+# Output stage
 While an H-bridge is needed, there are many different choices out there, like L298, A4950, Monster Motor Shield, BTS7960, etc
 
-Depending om your intended application the way the DC motor is control thrugh the H-bridge can be Sign-Magniture drive http://modularcircuits.tantosonline.com/blog/articles/h-bridge-secrets/sign-magnitude-drive/ or Lock Anti-Phase drive http://www.modularcircuits.com/blog/articles/h-bridge-secrets/lock-anti-phase-drive/
+Depending om your intended application the way the DC motor is control thrugh the H-bridge can be Sign-Magnitude drive http://modularcircuits.tantosonline.com/blog/articles/h-bridge-secrets/sign-magnitude-drive/ or Lock Anti-Phase drive http://www.modularcircuits.com/blog/articles/h-bridge-secrets/lock-anti-phase-drive/ though I have focus on the former, the latter may be preferred when braking action is important (like when a robot has to go downhill).
 
 # usage
 ```
