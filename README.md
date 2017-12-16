@@ -27,6 +27,11 @@ It is possible to detect endstops without the use of switches.  If seeking an en
 
 A video of hard homing can be seen https://youtu.be/kTUaKS-4Spc
 
+#Output stage
+While an H-bridge is needed, there are many different choices out there, like L298, A4950, Monster Motor Shield, BTS7960, etc
+
+Depending om your intended application the way the DC motor is control thrugh the H-bridge can be Sign-Magniture drive http://modularcircuits.tantosonline.com/blog/articles/h-bridge-secrets/sign-magnitude-drive/ or Lock Anti-Phase drive http://www.modularcircuits.com/blog/articles/h-bridge-secrets/lock-anti-phase-drive/
+
 # usage
 ```
 Available serial commands: (lines end with CRLF or LF) 
@@ -48,7 +53,7 @@ Written in Processing it allows you to see graphically the PID response to a ste
 ![Screenshot](http://i.imgur.com/3c8WySu.png "Tuning tool")
 
 #trapezoidal motion profile
-I reckon the evolution of this project is to offload motion profile generation off main processor. In order to do that firmware needs to be able to achieve motion in a controlled way (which is key for joint axis movement). The first and simpler idea is to use a trapezoidal motion pattern.
+I reckon the evolution of this project is to offload motion profile generation off from main processor. In order to do that firmware needs to be able to achieve motion in a controlled way (which is key for joint axis movement). The first and simpler idea is to use a trapezoidal motion pattern.
 
 New commands have been added for this feature: 
 ```
