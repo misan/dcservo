@@ -48,11 +48,14 @@ A will toggle on/off showing regulator status every second
 L will execute homing
 ```
 
-#tuning tool
-Written in Processing it allows you to see graphically the PID response to a step input while you can tune it by pressing capital P, I and D keys to increase values or p, i and d to lower them. Please have a look at this video https://www.youtube.com/watch?v=uXnDwojRb1g
+# tuning tool
+Written in Processing it allows you to see graphically the PID response to a step input while you can tune it by pressing capital P, I and D keys to increase values or p, i and d to lower them. Please have a look at this videos https://www.youtube.com/watch?v=uXnDwojRb1g
 ![Screenshot](http://i.imgur.com/3c8WySu.png "Tuning tool")
+and
+https://youtu.be/fusr9eTceEo
+![Screenshot](https://i.imgur.com/sn3yffy.png "How Kp, Kd and Ki values affect PID behavior?")
 
-#trapezoidal motion profile
+# trapezoidal motion profile
 I reckon the evolution of this project is to offload motion profile generation off from main processor. In order to do that firmware needs to be able to achieve motion in a controlled way (which is key for joint axis movement). The first and simpler idea is to use a trapezoidal motion pattern.
 
 New commands have been added for this feature: 
