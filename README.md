@@ -6,6 +6,8 @@ as a replacement of a stepper motor and its drive electronics. In order to be co
 controller accepts two inputs STEP and DIRECTION so an external trajectory controller can operate the motor
 as it would do with a stepper.
 
+![Screenshot](https://raw.githubusercontent.com/misan/dcservo/master/schematic2.png)
+
 This code depends on the excellent Arduino PID library by Brett Beauregard: https://github.com/br3ttb/Arduino-PID-Library/
 
 For easy configuration of PID parameters, serial port communication is used when adjusting them. PID values can
