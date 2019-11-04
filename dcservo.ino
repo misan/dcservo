@@ -2,7 +2,7 @@
 /* This one is not using any PinChangeInterrupt library */
 
 /*
-   This program uses an Arduino for a closed-loop control of a DC-motor. 
+   This program uses an Arduino UNO for a closed-loop control of a DC-motor. 
    Motor motion is detected by a quadrature encoder.
    Two inputs named STEP and DIR allow changing the target position.
    Serial port prints current position and target position every second.
