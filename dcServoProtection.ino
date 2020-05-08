@@ -59,7 +59,7 @@ void setup() {
   pinMode(encoder0PinB, INPUT);
   pciSetup(encoder0PinB);
   attachInterrupt(0, encoderInt, CHANGE);  // encoder pin on interrupt 0 - pin 2
-  attachInterrupt(1, countStep      , CHANGE);  // step  input on interrupt 1 - pin 3
+  attachInterrupt(1, countStep , RISING);  // step  input on interrupt 1 - pin 3
   TCCR1B = TCCR1B & 0b11111000 | 1; // set 31Kh PWM
   Serial.begin (115200);
   help();
