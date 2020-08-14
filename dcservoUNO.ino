@@ -11,7 +11,7 @@
    Pins used:
    Digital inputs 2 & 8 are connected to the two encoder signals (AB).
    Digital input 3 is the STEP input.
-   Analog input 0 is the DIR input.
+   Analog input A0 is the DIR input.
    Digital input 4 is the HOME output. asserted if encoder0Pos is smaller than one.
    Digital outputs 9 & 10 control the PWM outputs for the motor (I am using half L298 here).
 
