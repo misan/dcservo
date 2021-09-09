@@ -27,7 +27,9 @@ AMS provided free samples of magnetic encoder. Now the AS5600 encoder is support
 
 It is possible to detect endstops without the use of switches.  If seeking an endstop upon reset is not necessary, this option can be commented out within setup(). It moves the motor in the negative direction at a lesser power level until an obstacle makes the error go up.  This is the new endstop and a Zero offset can be added.  Pin 4 is asserted if the position is now Zero or negative. Pin 4 is reset if the the position is positive.  If the option A is active, the status of the home pin can be seen.
 
-An article about the project was written for Circut Cellar Magazine and it is now freely available in the their website: https://circuitcellar.com/research-design-hub/projects/stepper-motor-emulator-part-1/
+Two articles about the project were written for Circut Cellar Magazine and it is now freely available in the their website: 
+https://circuitcellar.com/research-design-hub/projects/stepper-motor-emulator-part-1/
+https://circuitcellar.com/research-design-hub/projects/stepper-motor-emulator-part-2/
 
 A video of hard homing can be seen https://youtu.be/kTUaKS-4Spc
 
