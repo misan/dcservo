@@ -68,3 +68,5 @@ F<max_velocity>
 Y<destination> 
 ```
 The latter is to perform the actual movement to an absolute destination, measured in encoder counts, using a trapezoidal speed motion pattern. No optimization effort in the math has yet been done.
+
+You may want to check Paul's fork using Bluepill for handling three motors: https://github.com/paukstelis/dcservo
