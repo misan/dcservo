@@ -38,10 +38,6 @@ boolean auto1=false, auto2=false,counting=false;
 long previousMillis = 0;        // will store last time LED was updated
 
 long target1=0;  // destination location at any moment
-
-//for motor control ramps 1.4
-bool newStep = false;
-bool oldStep = false;
 bool dir = false;
 byte skip=0;
 
